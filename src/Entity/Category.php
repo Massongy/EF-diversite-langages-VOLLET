@@ -2,35 +2,35 @@
 
 namespace App\Entity;
 
-use App\Repository\PaymentMethodRepository;
+use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: PaymentMethodRepository::class)]
-class PaymentMethod
+#[ORM\Entity(repositoryClass: CategoryRepository::class)]
+class Category
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?bool $carte = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $Alimentation = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?bool $espece = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $Transport = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?bool $virement = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $Sante = null;
 
     /**
      * @var Collection<int, Transaction>
      */
-    #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'PaymentMethod')]
+    #[ORM\ManyToMany(targetEntity: Transaction::class, mappedBy: 'category')]
     private Collection $transactions;
 
-    #[ORM\OneToOne(mappedBy: 'paymentmethod', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'category', cascade: ['persist', 'remove'])]
     private ?User $user = null;
 
     public function __construct()
@@ -43,38 +43,38 @@ class PaymentMethod
         return $this->id;
     }
 
-    public function isCarte(): ?bool
+    public function getAlimentation(): ?string
     {
-        return $this->carte;
+        return $this->Alimentation;
     }
 
-    public function setCarte(bool $carte): static
+    public function setAlimentation(?string $Alimentation): static
     {
-        $this->carte = $carte;
+        $this->Alimentation = $Alimentation;
 
         return $this;
     }
 
-    public function isEspece(): ?bool
+    public function getTransport(): ?string
     {
-        return $this->espece;
+        return $this->Transport;
     }
 
-    public function setEspece(?bool $espece): static
+    public function setTransport(?string $Transport): static
     {
-        $this->espece = $espece;
+        $this->Transport = $Transport;
 
         return $this;
     }
 
-    public function isVirement(): ?bool
+    public function getSante(): ?string
     {
-        return $this->virement;
+        return $this->Sante;
     }
 
-    public function setVirement(?bool $virement): static
+    public function setSante(?string $Sante): static
     {
-        $this->virement = $virement;
+        $this->Sante = $Sante;
 
         return $this;
     }
@@ -91,7 +91,7 @@ class PaymentMethod
     {
         if (!$this->transactions->contains($transaction)) {
             $this->transactions->add($transaction);
-            $transaction->setPaymentMethod($this);
+            $transaction->addCategory($this);
         }
 
         return $this;
@@ -100,10 +100,7 @@ class PaymentMethod
     public function removeTransaction(Transaction $transaction): static
     {
         if ($this->transactions->removeElement($transaction)) {
-            // set the owning side to null (unless already changed)
-            if ($transaction->getPaymentMethod() === $this) {
-                $transaction->setPaymentMethod(null);
-            }
+            $transaction->removeCategory($this);
         }
 
         return $this;
@@ -118,12 +115,12 @@ class PaymentMethod
     {
         // unset the owning side of the relation if necessary
         if ($user === null && $this->user !== null) {
-            $this->user->setPaymentmethod(null);
+            $this->user->setCategory(null);
         }
 
         // set the owning side of the relation if necessary
-        if ($user !== null && $user->getPaymentmethod() !== $this) {
-            $user->setPaymentmethod($this);
+        if ($user !== null && $user->getCategory() !== $this) {
+            $user->setCategory($this);
         }
 
         $this->user = $user;
